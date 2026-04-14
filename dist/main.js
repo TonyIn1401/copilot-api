@@ -57,7 +57,7 @@ const COPILOT_VERSION = "0.26.7";
 const EDITOR_PLUGIN_VERSION = `copilot-chat/${COPILOT_VERSION}`;
 const USER_AGENT = `GitHubCopilotChat/${COPILOT_VERSION}`;
 const API_VERSION = "2025-04-01";
-const copilotBaseUrl = (state$1) => state$1.accountType === "individual" ? "https://api.githubcopilot.com" : `https://api.${state$1.accountType}.githubcopilot.com`;
+const copilotBaseUrl = (state$1) => state$1.copilotApiUrl ?? (state$1.accountType === "individual" ? "https://api.githubcopilot.com" : `https://api.${state$1.accountType}.githubcopilot.com`);
 const copilotHeaders = (state$1, vision = false) => {
 	const headers = {
 		Authorization: `Bearer ${state$1.copilotToken}`,
@@ -157,7 +157,11 @@ async function getGitHubUser() {
 //#region src/services/copilot/get-models.ts
 const getModels = async () => {
 	const response = await fetch(`${copilotBaseUrl(state)}/models`, { headers: copilotHeaders(state) });
-	if (!response.ok) throw new HTTPError("Failed to get models", response);
+	if (!response.ok) {
+		const body = await response.text().catch(() => "");
+		consola.error(`Failed to get models from ${copilotBaseUrl(state)}/models [${response.status}]:`, body);
+		throw new HTTPError("Failed to get models", response);
+	}
 	return await response.json();
 };
 
@@ -229,16 +233,21 @@ async function pollAccessToken(deviceCode) {
 const readGithubToken = () => fs.readFile(PATHS.GITHUB_TOKEN_PATH, "utf8");
 const writeGithubToken = (token) => fs.writeFile(PATHS.GITHUB_TOKEN_PATH, token);
 const setupCopilotToken = async () => {
-	const { token, refresh_in } = await getCopilotToken();
+	const { token, refresh_in, endpoints } = await getCopilotToken();
 	state.copilotToken = token;
+	if (endpoints?.api) {
+		state.copilotApiUrl = endpoints.api.replace(/\/_ping$/, "");
+		consola.debug(`Using Copilot API endpoint: ${state.copilotApiUrl}`);
+	}
 	consola.debug("GitHub Copilot Token fetched successfully!");
 	if (state.showToken) consola.info("Copilot token:", token);
 	const refreshInterval = (refresh_in - 60) * 1e3;
 	setInterval(async () => {
 		consola.debug("Refreshing Copilot token");
 		try {
-			const { token: token$1 } = await getCopilotToken();
+			const { token: token$1, endpoints: endpoints$1 } = await getCopilotToken();
 			state.copilotToken = token$1;
+			if (endpoints$1?.api) state.copilotApiUrl = endpoints$1.api.replace(/\/_ping$/, "");
 			consola.debug("Copilot token refreshed");
 			if (state.showToken) consola.info("Refreshed Copilot token:", token$1);
 		} catch (error) {

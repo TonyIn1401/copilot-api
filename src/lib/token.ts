@@ -16,8 +16,13 @@ const writeGithubToken = (token: string) =>
   fs.writeFile(PATHS.GITHUB_TOKEN_PATH, token)
 
 export const setupCopilotToken = async () => {
-  const { token, refresh_in } = await getCopilotToken()
+  const { token, refresh_in, endpoints } = await getCopilotToken()
   state.copilotToken = token
+
+  if (endpoints?.api) {
+    state.copilotApiUrl = endpoints.api.replace(/\/_ping$/, "")
+    consola.debug(`Using Copilot API endpoint: ${state.copilotApiUrl}`)
+  }
 
   // Display the Copilot token to the screen
   consola.debug("GitHub Copilot Token fetched successfully!")
@@ -29,8 +34,11 @@ export const setupCopilotToken = async () => {
   setInterval(async () => {
     consola.debug("Refreshing Copilot token")
     try {
-      const { token } = await getCopilotToken()
+      const { token, endpoints } = await getCopilotToken()
       state.copilotToken = token
+      if (endpoints?.api) {
+        state.copilotApiUrl = endpoints.api.replace(/\/_ping$/, "")
+      }
       consola.debug("Copilot token refreshed")
       if (state.showToken) {
         consola.info("Refreshed Copilot token:", token)

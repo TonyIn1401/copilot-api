@@ -15,6 +15,9 @@ export interface State {
   // GitHub Enterprise URL (e.g., https://github.example.com)
   githubUrl?: string
 
+  // Copilot API endpoint URL from token response
+  copilotApiUrl?: string
+
   // Rate limiting configuration
   rateLimitSeconds?: number
   lastRequestTimestamp?: number

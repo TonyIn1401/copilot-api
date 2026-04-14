@@ -1,3 +1,5 @@
+import consola from "consola"
+
 import { copilotBaseUrl, copilotHeaders } from "~/lib/api-config"
 import { HTTPError } from "~/lib/error"
 import { state } from "~/lib/state"
@@ -7,7 +9,14 @@ export const getModels = async () => {
     headers: copilotHeaders(state),
   })
 
-  if (!response.ok) throw new HTTPError("Failed to get models", response)
+  if (!response.ok) {
+    const body = await response.text().catch(() => "")
+    consola.error(
+      `Failed to get models from ${copilotBaseUrl(state)}/models [${response.status}]:`,
+      body,
+    )
+    throw new HTTPError("Failed to get models", response)
+  }
 
   return (await response.json()) as ModelsResponse
 }
