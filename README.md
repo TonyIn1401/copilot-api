@@ -118,22 +118,22 @@ The Docker image includes:
 
 ## Using with npx
 
-You can run the project directly using npx:
+You can run the project directly from the GitHub repository using npx:
 
 ```sh
-npx copilot-api@latest start
+npx --yes github:TonyIn1401/copilot-api start
 ```
 
 With options:
 
 ```sh
-npx copilot-api@latest start --port 8080
+npx --yes github:TonyIn1401/copilot-api start --port 8080
 ```
 
 For authentication only:
 
 ```sh
-npx copilot-api@latest auth
+npx --yes github:TonyIn1401/copilot-api auth
 ```
 
 ## Command Structure
@@ -162,14 +162,16 @@ The following command line options are available for the `start` command:
 | --github-token | Provide GitHub token directly (must be generated using the `auth` subcommand) | none       | -g    |
 | --claude-code  | Generate a command to launch Claude Code with Copilot API config              | false      | -c    |
 | --show-token   | Show GitHub and Copilot tokens on fetch and refresh                           | false      | none  |
-| --proxy-env    | Initialize proxy from environment variables                                   | false      | none  |
+| --proxy-env    | Initialize proxy from environment variables                                                      | false      | none  |
+| --github-url   | GitHub Enterprise URL (e.g., https://github.example.com). Can also be set via GITHUB_URL env var | none       | none  |
 
 ### Auth Command Options
 
-| Option       | Description               | Default | Alias |
-| ------------ | ------------------------- | ------- | ----- |
-| --verbose    | Enable verbose logging    | false   | -v    |
-| --show-token | Show GitHub token on auth | false   | none  |
+| Option       | Description                                                                                      | Default | Alias |
+| ------------ | ------------------------------------------------------------------------------------------------ | ------- | ----- |
+| --verbose    | Enable verbose logging                                                                           | false   | -v    |
+| --show-token | Show GitHub token on auth                                                                        | false   | none  |
+| --github-url | GitHub Enterprise URL (e.g., https://github.example.com). Can also be set via GITHUB_URL env var | none    | none  |
 
 ### Debug Command Options
 
@@ -211,59 +213,57 @@ New endpoints for monitoring your Copilot usage and quotas.
 
 ## Example Usage
 
-Using with npx:
-
 ```sh
 # Basic usage with start command
-npx copilot-api@latest start
+npx --yes github:TonyIn1401/copilot-api start
 
 # Run on custom port with verbose logging
-npx copilot-api@latest start --port 8080 --verbose
+npx --yes github:TonyIn1401/copilot-api start --port 8080 --verbose
 
 # Use with a business plan GitHub account
-npx copilot-api@latest start --account-type business
+npx --yes github:TonyIn1401/copilot-api start --account-type business
 
 # Use with an enterprise plan GitHub account
-npx copilot-api@latest start --account-type enterprise
+npx --yes github:TonyIn1401/copilot-api start --account-type enterprise
 
 # Enable manual approval for each request
-npx copilot-api@latest start --manual
+npx --yes github:TonyIn1401/copilot-api start --manual
 
 # Set rate limit to 30 seconds between requests
-npx copilot-api@latest start --rate-limit 30
+npx --yes github:TonyIn1401/copilot-api start --rate-limit 30
 
 # Wait instead of error when rate limit is hit
-npx copilot-api@latest start --rate-limit 30 --wait
+npx --yes github:TonyIn1401/copilot-api start --rate-limit 30 --wait
 
 # Provide GitHub token directly
-npx copilot-api@latest start --github-token ghp_YOUR_TOKEN_HERE
+npx --yes github:TonyIn1401/copilot-api start --github-token ghp_YOUR_TOKEN_HERE
 
 # Run only the auth flow
-npx copilot-api@latest auth
+npx --yes github:TonyIn1401/copilot-api auth
 
 # Run auth flow with verbose logging
-npx copilot-api@latest auth --verbose
+npx --yes github:TonyIn1401/copilot-api auth --verbose
 
 # Show your Copilot usage/quota in the terminal (no server needed)
-npx copilot-api@latest check-usage
+npx --yes github:TonyIn1401/copilot-api check-usage
 
 # Display debug information for troubleshooting
-npx copilot-api@latest debug
+npx --yes github:TonyIn1401/copilot-api debug
 
 # Display debug information in JSON format
-npx copilot-api@latest debug --json
+npx --yes github:TonyIn1401/copilot-api debug --json
 
 # Initialize proxy from environment variables (HTTP_PROXY, HTTPS_PROXY, etc.)
-npx copilot-api@latest start --proxy-env
+npx --yes github:TonyIn1401/copilot-api start --proxy-env
 ```
 
 ## Using the Usage Viewer
 
 After starting the server, a URL to the Copilot Usage Dashboard will be displayed in your console. This dashboard is a web interface for monitoring your API usage.
 
-1.  Start the server. For example, using npx:
+1.  Start the server:
     ```sh
-    npx copilot-api@latest start
+    npx --yes github:TonyIn1401/copilot-api start
     ```
 2.  The server will output a URL to the usage viewer. Copy and paste this URL into your browser. It will look something like this:
     `https://ericc-ch.github.io/copilot-api?endpoint=http://localhost:4141/usage`
@@ -277,7 +277,36 @@ The dashboard provides a user-friendly interface to view your Copilot usage data
 - **Detailed Information**: See the full JSON response from the API for a detailed breakdown of all available usage statistics.
 - **URL-based Configuration**: You can also specify the API endpoint directly in the URL using a query parameter. This is useful for bookmarks or sharing links. For example:
   `https://ericc-ch.github.io/copilot-api?endpoint=http://your-api-server/usage`
+## GitHub Enterprise (GHE) Authentication
 
+This proxy supports GitHub Enterprise Server (GHE) in addition to standard GitHub.com. You can authenticate against your GHE instance using either a CLI flag or an environment variable.
+
+### Using the CLI Flag
+
+```sh
+# Authenticate against GHE
+npx --yes github:TonyIn1401/copilot-api auth --github-url https://github.example.com
+
+# Start the server with GHE
+npx --yes github:TonyIn1401/copilot-api start --github-url https://github.example.com
+```
+
+### Using the Environment Variable
+
+You can set the `GITHUB_URL` environment variable instead of passing the flag each time:
+
+```sh
+# Set GHE URL via environment variable
+export GITHUB_URL=https://github.example.com
+
+# Then run as usual
+npx --yes github:TonyIn1401/copilot-api auth
+npx --yes github:TonyIn1401/copilot-api start
+```
+
+When a GHE URL is configured, all authentication endpoints (device code, access token, Copilot token) will be routed to your GHE instance automatically. The API base URL will be set to `https://github.example.com/api/v3` instead of `https://api.github.com`.
+
+> **Note:** Your GHE instance must have GitHub Copilot enabled and your account must have a valid Copilot subscription.
 ## Using with Claude Code
 
 This proxy can be used to power [Claude Code](https://docs.anthropic.com/en/claude-code), an experimental conversational AI assistant for developers from Anthropic.
@@ -289,7 +318,7 @@ There are two ways to configure Claude Code to use this proxy:
 To get started, run the `start` command with the `--claude-code` flag:
 
 ```sh
-npx copilot-api@latest start --claude-code
+npx --yes github:TonyIn1401/copilot-api start --claude-code
 ```
 
 You will be prompted to select a primary model and a "small, fast" model for background tasks. After selecting the models, a command will be copied to your clipboard. This command sets the necessary environment variables for Claude Code to use the proxy.
@@ -298,7 +327,7 @@ Paste and run this command in a new terminal to launch Claude Code.
 
 ### Manual Configuration with `settings.json`
 
-Alternatively, you can configure Claude Code by creating a `.claude/settings.json` file in your project's root directory. This file should contain the environment variables needed by Claude Code. This way you don't need to run the interactive setup every time.
+Alternatively, you can configure Claude Code by creating a `.claude/settings.json` file in your project's root directory (or `~/.claude/settings.json` for global configuration). This file should contain the environment variables needed by Claude Code. This way you don't need to run the interactive setup every time.
 
 Here is an example `.claude/settings.json` file:
 
@@ -319,6 +348,23 @@ Here is an example `.claude/settings.json` file:
       "WebSearch"
     ]
   }
+}
+```
+
+For a recommended global configuration using Claude models, update `~/.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:4141",
+    "ANTHROPIC_AUTH_TOKEN": "dummy",
+    "ANTHROPIC_MODEL": "claude-opus-4.6",
+    "ANTHROPIC_REASONING_MODEL": "claude-opus-4.6",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4.6",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4.5",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4.6"
+  },
+  "includeCoAuthoredBy": false
 }
 ```
 
